@@ -10,10 +10,21 @@ ENV DEBIAN_FRONTEND=noninteractive
 # apt update #
 ##############
 RUN apt-get update
-
-RUN apt-get install -y wget git build-essential libgl1-mesa-dev libfreetype6-dev libglu1-mesa-dev libzmq3-dev libsqlite3-dev libicu-dev python3-dev libgl2ps-dev libfreeimage-dev libtbb-dev ninja-build bison autotools-dev automake libpcre3 libpcre3-dev tcl8.6 tcl8.6-dev tk8.6 tk8.6-dev libxmu-dev libxi-dev libopenblas-dev libboost-all-dev swig libxml2-dev cmake rapidjson-dev
-
-RUN dpkg-reconfigure --frontend noninteractive tzdata
+RUN apt install libgl1-mesa-glx -y
 
 USER jovyan
-WORKDIR /home/jovyan/work
+
+# Install packages via requirements.txt
+ADD requirements.txt .
+RUN pip install -r requirements.txt
+
+# .. Or update conda base environment to match specifications in environment.yml
+ADD ifcopenshell.yml /tmp/environment.yml
+
+# All packages specified in environment.yml are installed in the base environment
+RUN conda env update -f /tmp/environment.yml && \
+    conda clean -a -f -y
+RUN jupyter labextension install jupyter-threejs
+RUN jupyter labextension install jupyter-datawidgets
+RUN jupyter labextension install ipycanvas
+
