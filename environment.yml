@@ -1,0 +1,10 @@
+name: base
+channels:
+  - conda-forge
+dependencies:
+  - pythreejs
+  - ifcopenshell
+  - pythonocc-core
+  - python-graphviz
+  - shapely
+  - ipycanvas
