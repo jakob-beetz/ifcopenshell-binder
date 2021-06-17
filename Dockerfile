@@ -1,11 +1,11 @@
-FROM jupyter/scipy-notebook
+FROM jupyter/scipy-notebook:5cb007f03275
 
 MAINTAINER Jakob Beetz
 USER root
 
 
 RUN apt-get update
-RUN apt install libgl1-mesa-glx -y
+RUN apt install libgl1-mesa-glx git -y
 
 
 
