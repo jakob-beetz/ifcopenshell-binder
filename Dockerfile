@@ -7,7 +7,7 @@ USER root
 RUN apt-get update
 RUN apt install libgl1-mesa-glx -y
 
-USER jovyan
+
 
 # Install packages via requirements.txt
 #ADD requirements.txt .
@@ -15,7 +15,6 @@ USER jovyan
 
 # .. Or update conda base environment to match specifications in environment.yml
 ADD environment.yml environment.yml
-ADD .  
 
 # All packages specified in environment.yml are installed in the base environment
 RUN conda env update -f environment.yml && \
@@ -24,5 +23,5 @@ RUN jupyter labextension install jupyter-threejs
 RUN jupyter labextension install jupyter-datawidgets
 RUN jupyter labextension install ipycanvas
 
-WORKDIR /home/jovyan/
-
+USER jovyan
+WORKDIR /home/jovyan/work
