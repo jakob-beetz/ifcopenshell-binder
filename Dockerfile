@@ -15,6 +15,7 @@ RUN apt install libgl1-mesa-glx git -y
 
 # .. Or update conda base environment to match specifications in environment.yml
 ADD environment.yml environment.yml
+ADD . /home/jovyan/work/
 
 # All packages specified in environment.yml are installed in the base environment
 RUN conda env update -f environment.yml && \
