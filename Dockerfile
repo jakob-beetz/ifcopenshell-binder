@@ -1,7 +1,6 @@
-FROM jupyter/scipy-notebook:5cb007f03275
+FROM jupyter/scipy-notebook
 
-MAINTAINER Thomas Paviot <tpaviot@gmail.com>
-
+MAINTAINER Jakob Beetz
 USER root
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -19,10 +18,10 @@ USER jovyan
 #RUN pip install -r requirements.txt
 
 # .. Or update conda base environment to match specifications in environment.yml
-ADD environment.yml /tmp/environment.yml
+ADD environment.yml environment.yml
 
 # All packages specified in environment.yml are installed in the base environment
-RUN conda env update -f /tmp/environment.yml && \
+RUN conda env update -f environment.yml && \
     conda clean -a -f -y
 RUN jupyter labextension install jupyter-threejs
 RUN jupyter labextension install jupyter-datawidgets
