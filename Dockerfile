@@ -27,3 +27,4 @@ RUN jupyter labextension install jupyter-threejs
 RUN jupyter labextension install jupyter-datawidgets
 RUN jupyter labextension install ipycanvas
 
+WORKDIR /home/jovyan/work
