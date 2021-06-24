@@ -2,13 +2,11 @@ name: base
 channels:
   - conda-forge
 dependencies:
-  - mesa
   - pythreejs
-  - ifcopenshell
   - pythonocc-core
+  - ifcopenshell
   - python-graphviz
   - shapely
   - ipycanvas
   - lxml
   - sidecar
-
