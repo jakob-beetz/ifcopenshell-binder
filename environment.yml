@@ -1,9 +1,10 @@
 name: base
 channels:
+  - pythonocc
   - conda-forge
 dependencies:
-  - pythreejs
   - pythonocc-core
+  - pythreejs
   - ifcopenshell
   - python-graphviz
   - shapely
