@@ -10,3 +10,5 @@ dependencies:
   - ipycanvas
   - lxml
   - sidecar
+  - ipycytoscape
+  - networkx
