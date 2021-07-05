@@ -3,8 +3,8 @@ channels:
   - pythonocc
   - conda-forge
 dependencies:
-  - pythonocc-core
-  - pythreejs
+  - pythonocc-core=7.4.1
+  - pythreejs=2.2.1
   - ifcopenshell
   - python-graphviz
   - shapely
