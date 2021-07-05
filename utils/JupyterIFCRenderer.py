@@ -6,6 +6,7 @@ import ipywidgets as widgets
 
 import OCC.Core, OCC.Core.gp
 import ifcopenshell, ifcopenshell.geom
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeSphere
 from pythreejs import Plane
 
 
@@ -16,7 +17,7 @@ class JupyterIFCRenderer(JupyterRenderer):
     def __init__(self,
                 model,
                 display_ents = ["IfcProduct"], 
-                hide_ents = ["IfcOpeningElement", "IfcFurnitureElement", "IfcSpace"],
+                hide_ents = ["IfcOpeningElement", "IfcSpace"],
                 size=(640, 480),
                 compute_normals_mode=NORMAL.CLIENT_SIDE,
                 default_shape_color=format_color(166, 166, 166), # light grey
@@ -48,11 +49,10 @@ class JupyterIFCRenderer(JupyterRenderer):
         self.register_select_callback(self.ifc_element_click)
         
        
-        # to_display = list(map(m.by_type for p in display_ents)) 
         to_display = [] 
-        # print(display_ents)
         for ent in display_ents:
-            to_display.extend(model.by_type(ent))
+            to_display.extend(model.by_type(ent, True))
+        # print(display_ents)
         self.shapedict = {}
         self.elementdict = {}
         self._meshdict = {}
@@ -63,11 +63,13 @@ class JupyterIFCRenderer(JupyterRenderer):
         
         for product in to_display:
             # some IfcProducts don't have any 3d representation
-            if (product.Representation is not None and product.is_a() not in hide_ents) :  
+            if (product.Representation is not None ) :  
 
                 pdct_shape = ifcopenshell.geom.create_shape(settings, inst=product)
                 r,g,b,alpha = pdct_shape.styles[0] # the shape color
                 # Styles come as floats 0 <= style <= 1
+                if r == g == b == -1:
+                    r = b = g = 0.7
                 color = format_color(int(abs(r)*255),int(abs(g*255)),int(abs(b)*255))
                
                 self.shapedict[pdct_shape.geometry]=product
@@ -77,6 +79,10 @@ class JupyterIFCRenderer(JupyterRenderer):
                 # any renderer (threejs, x3dom, jupyter, qt5 based etc.)
                 self.DisplayShape(pdct_shape.geometry, shape_color = color, transparency=False, opacity=0.5)
 #               
+        for ent in hide_ents:
+            to_hide = model.by_type(ent)
+            for p in to_hide:
+                self.setVisible(p, False)
         
         for meshid, shape in self._shapes.items():
             product = self.shapedict[shape] 
@@ -87,12 +93,19 @@ class JupyterIFCRenderer(JupyterRenderer):
             self._bb = BoundingBox([self._shapes.values()])
         else:  # if nothing registered yet, create a fake bb
             self._bb = BoundingBox([[BRepPrimAPI_MakeSphere(5.).Shape()]])
-        self._sectionXSlider = FloatSlider(layout=Layout(width='200px'), min=self._bb.ymin-1, max=self._bb.ymax+1, value=self._bb.ymax+1,step=0.1)
-                                                 
+        
+        self._sectionXSlider = FloatSlider(name = "section plane X", layout=Layout(width='200px'), min=self._bb.ymin-1, max=self._bb.ymax+1, value=self._bb.ymax+1,step=0.1)
         self._sectionXSlider.observe(self._sectionPlaneX, "value")
-        self._controls.append(self._sectionXSlider)
-        #self._controls=widgets.HBox([self._controls, widgets.VBox([widgets.Label("Y"), self._sectionXSlider])])
+        self._sectionXSliderW = widgets.HBox([widgets.Label(value="X section"),self._sectionXSlider])
+        self._controls.append(self._sectionXSliderW)
 
+        self._sectionZSlider = FloatSlider(name = "section plane Z", layout=Layout(width='200px'), min=self._bb.zmin-1, max=self._bb.zmax+1, value=self._bb.zmax+1,step=0.1)
+        self._sectionZSlider.observe(self._sectionPlaneZ, "value")
+        self._sectionZSliderW = widgets.HBox([widgets.Label(value="Z section"), self._sectionZSlider])
+        self._controls.append(self._sectionZSliderW)
+    
+        self._controls = (widgets.VBox(children=self._controls[:3]),widgets.VBox(children=self._controls[3:6]),widgets.VBox(children=self._controls[6:]))
+        
     def ifc_element_click(self, value):
         # ("element click")
         # self.html.value(self, value)
@@ -115,7 +128,7 @@ class JupyterIFCRenderer(JupyterRenderer):
         # for shp in self._current_shape_selection:
         shp = self._current_shape_selection
         # print(self._current_shape_selection.colors)
-        print(self._current_mesh_selection.material.color)
+        #print(self._current_mesh_selection.material.color)
         self._current_mesh_selection.material.color = color
         # self.DisplayShape(shp, shape_color = format_color(*color), transparency=False, opacity=0.5)
 
@@ -137,10 +150,11 @@ class JupyterIFCRenderer(JupyterRenderer):
             self.DisplayShape(p, shape_color = c)
             
     def setColorProduct(self, product, color):
+        
         mesh = self._meshdict.get(product, None)
         if mesh:
             mesh.material.color = color
-                
+        
 #         for shp in self._displayed_pickable_objects.children:
             # if self.elementdict[product]
             # print (f"Shape: {shp} \t\t\t\t {product}" )
@@ -185,6 +199,13 @@ class JupyterIFCRenderer(JupyterRenderer):
             mesh.material.color = color
             
     
+    def setVisible(self, product, visible):
+        mesh = self._meshdict.get(product, None)
+        if mesh:    
+            #print(mesh)
+            mesh.visible = visible 
+    
+    
     def highlight(self, product):
         mesh = self._meshdict.get(product, None)
         if mesh:    
@@ -198,6 +219,11 @@ class JupyterIFCRenderer(JupyterRenderer):
     def _sectionPlaneX(self, x):
             self._renderer.localClippingEnabled = True;
             self._renderer.clippingPlanes = [Plane((0,-1,0), x['new'])]
+            
+    def _sectionPlaneZ(self, z):
+            self._renderer.localClippingEnabled = True;
+            self._renderer.clippingPlanes = [Plane((0,0,-1), z['new'])]
+                
                 
     def getSelectedProduct(self):
         shp = self._current_shape_selection
@@ -207,14 +233,22 @@ class JupyterIFCRenderer(JupyterRenderer):
     
     def setDefaultColors(self):
         for p,m  in self._meshdict.items():
-            if p.is_a() in self.COLOR_MAPPINGS.keys():
+            if p.is_a() in self._COLOR_MAPPINGS.keys():
                 #print(f"{p.Name}, {p.is_a()} \t\t\t  {self.DEFAULT_COLORS.get(self.COLOR_MAPPINGS.get(p.is_a()))}")
-                m.material.color = self.DEFAULT_COLORS.get(self.COLOR_MAPPINGS.get(p.is_a()),"#333333")
+                m.material.color = self._DEFAULT_COLORS.get(self._COLOR_MAPPINGS.get(p.is_a()),"#333333")
             else:
-                m.material.color = "#222222"
+                m.material.color = "#AAAAAA"
                                                     
-
-    DEFAULT_COLORS = {
+    def colorPicker(self):
+        return widgets.ColorPicker(
+            concise=False,
+            description='Pick a color',
+            value='blue',
+            disabled=False
+        )
+        
+        
+    _DEFAULT_COLORS = {
         'dark-electric-blue': '#527589',
         'little-boy-blue' : '#64a1ec',
         'black-coral' : '#525e71',
@@ -228,14 +262,12 @@ class JupyterIFCRenderer(JupyterRenderer):
         'prussian-blue' : '#1d3557',
         'Khaki Web' : '#C6AC8F'
     }
-    COLOR_MAPPINGS = {
-        'IfcWall' : 'Khaki Web',
-        'IfcWallStandardCase' : 'honeydew',
+    _COLOR_MAPPINGS = {
+        'IfcWall' : 'pale-silver',
+        'IfcWallStandardCase' : 'pale-silver',
         'IfcWindow' : 'celdon-blue',
         'IfcFloor' : 'brown-sugar',
         'IfcSlab' : 'Khaki Web',
         'IfcDoor' : 'honeydew'
         
     }
-
-
