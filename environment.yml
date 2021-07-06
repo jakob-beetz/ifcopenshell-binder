@@ -13,3 +13,4 @@ dependencies:
   - sidecar
   - ipycytoscape
   - networkx
+  - nbgitpuller
