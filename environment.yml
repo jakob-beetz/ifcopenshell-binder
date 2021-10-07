@@ -1,6 +1,5 @@
 name: base
 channels:
-  - pythonocc
   - conda-forge
 dependencies:
   - pythonocc-core
