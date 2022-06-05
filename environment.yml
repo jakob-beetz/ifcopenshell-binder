@@ -41,5 +41,5 @@ dependencies:
 - invoke=1.2
 - rdflib
 - sparqlwrapper
-- graphviz-python
+- python-graphviz
 - pydotplus
