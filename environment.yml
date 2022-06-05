@@ -39,4 +39,7 @@ dependencies:
 - pyyaml
 - traittypes==0.2.1
 - invoke=1.2
-  
+- rdflib
+- sparqlwrapper
+- graphviz-python
+- pydotplus
